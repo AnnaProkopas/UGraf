@@ -34,3 +34,7 @@ DISTFILES += \
     cont+01.dat \
     cont+02.dat \
     cont+03.dat
+
+# install
+target.path = $$[QT_INSTALL_EXAMPLES]/widgets/mainwindows/application
+INSTALLS += target

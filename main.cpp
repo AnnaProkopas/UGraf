@@ -1,11 +1,27 @@
-#include "mainwindow.h"
 #include <QApplication>
+#include <QCommandLineParser>
+#include <QCommandLineOption>
+
+#include "mainwindow.h"
 
 int main(int argc, char *argv[]){
     Q_INIT_RESOURCE(basicdrawing);
     QApplication a(argc, argv);
-    MainWindow *w = new MainWindow();
-    w->show();
-    w->read();
+
+    /*QCoreApplication::setOrganizationName("QtProject");
+    QCoreApplication::setApplicationName("Application Example");
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+    QCommandLineParser parser;
+    parser.setApplicationDescription(QCoreApplication::applicationName());
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addPositionalArgument("file", "The file to open.");
+    parser.process(app);*/
+
+    MainWindow w;
+   /*if (!parser.positionalArguments().isEmpty())
+            w.loadFile(parser.positionalArguments().first());*/
+    w.show();
+    w.read();
     return a.exec();
 }

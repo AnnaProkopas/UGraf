@@ -8,22 +8,48 @@
 #include <string> // подключаем строки
 #include <fstream> // подключаем файлы
 #include <cstdint>
+#include <QGuiApplication>
 
 #include "data.h"
 
+/*class QAction;
+class QMenu;
+class QPlainTextEdit;
+class QSessionManager;*/
 class RenderArea;
 
-class MainWindow : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
      MainWindow();
     ~MainWindow();
-     /*void plot(t_real* &listX, t_real* &listY, uint32_t k1, uint32_t k2, uint32_t _size, uint32 isCircle);
-     void getMin(double &mX, double &mY);
-     void getMax(double &mX, double &mY);*/
      void read();
+/*     void loadFile(const QString &fileName);
+protected:
+     void closeEvent(QCloseEvent *event) override;
+private slots:
+     void newFile();
+     void open();
+     bool save();
+     bool saveAs();
+     void about();
+     void documentWasModified();
+#ifndef QT_NO_SESSIONMANAGER
+     void commitData(QSessionManager &);
+#endif
+private:
+     void createActions();
+     void createStatusBar();
+     void readSettings();
+     void writeSettings();
+     bool maybeSave();
+     bool saveFile(const QString &fileName);
+     void setCurrentFile(const QString &fileName);
+     QString strippedName(const QString &fullFileName);
+     QPlainTextEdit *textEdit;
+     QString curFile;*/
 private:
      RenderArea *renderArea;
 };

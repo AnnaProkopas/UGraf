@@ -67,18 +67,18 @@ void RenderArea::getMin(double mX, double mY){
 }
 
 void RenderArea::getMax(double mX, double mY){
-    Xmax = (int)(zoom*mX) - Xmin;
-    Ymax = (int)(zoom*mY) - Ymin;
-    if (Xmax > Ymax)
-        zoom = (int)(70*width()/Xmax);
-    else zoom = (int)(70*height()/Ymax);
-    Xmax = (int)(zoom*(mX - Xmin/70));
-    Ymax = (int)(zoom*(mY - Ymin/70));
+    Xmax = (int)(cZoom*mX) - Xmin;
+    Ymax = (int)(cZoom*mY) - Ymin;
+    /*if (Xmax > Ymax)
+        cZoom = (int)(70*width()/Xmax);
+    else cZoom = (int)(70*height()/Ymax);*/
+    Xmax = (int)(cZoom*(mX - Xmin/70));
+    Ymax = (int)(cZoom*(mY - Ymin/70));
     max = QPoint(Xmax, Ymax);
 }
 
 QPoint* RenderArea::resetSize(QPoint * & p, uint32 s){
-    int tZ = zoom;
+    /*int tZ = zoom;
     if (Xmax > Ymax)
         zoom = (int)(70*width()/Xmax);
     else zoom = (int)(70*height()/Ymax);
@@ -87,8 +87,12 @@ QPoint* RenderArea::resetSize(QPoint * & p, uint32 s){
     //static bool isFirst = true;
     QPoint * NowPoint = new QPoint[s];
     for(int i = 0; i < s; i++)
-        NowPoint[i] = max/2 + zoom*p[i]/cZoom;
-    return NowPoint;
+        NowPoint[i] = max/2 + zoom*p[i]/cZoom;*/
+    return new QPoint[s];
+}
+
+QPoint RenderArea::getShift(QPoint now, double last){
+    return (now + Shift)/last*Zoom - now;
 }
 
 void RenderArea::paintEvent(QPaintEvent * /* event */)
@@ -110,11 +114,19 @@ void RenderArea::paintEvent(QPaintEvent * /* event */)
                 painter.translate(-50, -50);
             }
     painter.restore();
+    //resetSize();
     if (sizeL > 2){
         int i = 0;
+        std::list<QPoint*> temp;
         for (std::list<std::pair<QPoint *, int>>::iterator it=points.begin(); it != points.end(); i++, ++it){
-            painter.drawPolyline((*it).first, (*it).second - 1);
-            painter.setPen(QColor(4*i % 255, 0, 0, 120));
+            temp.push_back(new QPoint[(*it).second]);
+            for (int i0 = 0; i0 < (*it).second; i0++){
+                temp.back()[i0] = (*it).first[i0]*Zoom - Shift;
+            }
+            painter.setPen(QColor(4*i % 255, 0, 0, 70));
+            painter.drawPolyline(temp.back(), (*it).second - 1);
+            painter.setPen(QColor(0, 0, 4*i % 255, 200));
+            painter.drawPoints(temp.back(), (*it).second - 1);
             /*for(int r1 = 0; r1 < 3; r1 ++){
                 //RGB[r1] = 2 *( (l * hc >= dc) ? (l * hc - dc):0);
                 //RGB[r1] = (RGB <= 1).* RGB + (RGB > 1);????????
@@ -125,4 +137,28 @@ void RenderArea::paintEvent(QPaintEvent * /* event */)
     painter.setPen(palette().dark().color());
     painter.setBrush(Qt::NoBrush);
     painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
+
+
+void RenderArea::mousePressEvent(QMouseEvent *event) {
+
+}
+void RenderArea::mouseMoveEvent(QMouseEvent *event) {
+    //if ((event->buttons() & Qt::LeftButton) && scribbling)
+    //    drawLineTo(event->pos());
+}
+void RenderArea::mouseReleaseEvent(QMouseEvent *event) {
+
+}
+
+void RenderArea::wheelEvent(QWheelEvent *event) {
+    double lZ = Zoom;
+    if (event->delta() > 0)
+        Zoom *= 1.5;
+    else
+        Zoom /= 1.5;
+    std::cout << event->globalX() << "  " << event->globalY() << "\n";
+    std::cout << width() << "  " << height() << "\n";
+    Shift = getShift(event->pos(), lZ);
+    update();
 }
