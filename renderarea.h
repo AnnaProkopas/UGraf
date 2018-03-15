@@ -8,8 +8,13 @@
 #include <QPixmap>
 #include <QWidget>
 #include <QWheelEvent>
+#include <thread>
+#include <QImage>
 
-#include "data.h"
+typedef uint32_t uint32;
+typedef unsigned char uchar;
+
+typedef double t_real; typedef uint32_t t_size; typedef bool t_bool;
 
 class RenderArea : public QWidget
 {
@@ -38,15 +43,20 @@ private:
     static const uint32 cZoom = 170;
     int Xmin, Ymin, Xmax, Ymax;
     double Zoom = 1;
-    QPoint Shift = QPoint(0, 0);
+    QPoint Shift = QPoint(0, 0), PressPont;
     QPoint max;
     QPen pen;
     QBrush brush;
-    std::list<std::pair<QPoint *, int>>points;
+    std::list<std::pair<QPoint *, int>> points;
+    std::vector<std::pair<QPoint *, int>> drawing;
+    QImage panel;
+
     uint32_t sizeL = 0;
     QSize sizeW;
     bool antialiased;
     bool transformed;
+
+    /*static */void search(QPoint pos);
     QPoint* resetSize(QPoint * & p, uint32 s);
 protected:
     void mousePressEvent(QMouseEvent *event) override;

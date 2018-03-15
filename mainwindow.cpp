@@ -9,7 +9,7 @@ const int IdRole = Qt::UserRole;
 MainWindow::MainWindow()
     //: textEdit(new QPlainTextEdit)
 {
-
+    //'RGB', QPoint(width(), height()), colorname);
     renderArea = new RenderArea();
 
     setCentralWidget(renderArea);
@@ -78,10 +78,12 @@ void MainWindow::read(){
     for(uint32 i = 0; i < num_c; i++){
         fid.read((char *)&CONTN[i], sizeof(uint32));
     }
-    uchar* CONTS = new uchar[num_c], c;
+    bool* CONTS = new bool[num_c], c;
     for(uint32 i = 0; i < num_c; i++){
         fid.read((char *)&c, sizeof(char));
-        CONTS[i] = c*1;
+        if (c*1)
+            CONTS[i] = true;
+        else CONTS[i] = false;
     }
     fid.read((char *)&num_s, sizeof(uint32));
     uint32* STEPI = new uint32[num_s], *STEPN = new uint32[num_s];
@@ -101,7 +103,7 @@ void MainWindow::read(){
         uint32 c1 = STEPI[l] + 1, c2 = (c1 + STEPN[l]) - 1;
         for (uint32 i = c1 - 1; i < c2; i++){
             uint32 k1 = CONTI[i], k2 = (k1 + CONTN[i]) - 2;
-            renderArea->plot(NODEX, NODEY, k1, k2, k2 - k1 + 1 + ((CONTS[i]*1) ? 1:0), CONTS[i]*1);
+            renderArea->plot(NODEX, NODEY, k1, k2, k2 - k1 + 1 + (CONTS[i] ? 1:0), CONTS[i]);
         }
     }
 }

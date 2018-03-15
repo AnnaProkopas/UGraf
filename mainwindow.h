@@ -9,8 +9,7 @@
 #include <fstream> // подключаем файлы
 #include <cstdint>
 #include <QGuiApplication>
-
-#include "data.h"
+#include <QImage>
 
 /*class QAction;
 class QMenu;
@@ -52,6 +51,7 @@ private:
      QString curFile;*/
 private:
      RenderArea *renderArea;
+     QImage image;
 };
 
 #endif // MAINWINDOW_H

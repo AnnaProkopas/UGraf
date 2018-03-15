@@ -16,14 +16,11 @@ TEMPLATE = app
 
 SOURCES +=\
         mainwindow.cpp \
-    data.cpp \
     renderarea.cpp \
     main.cpp
 
 HEADERS  += mainwindow.h \
-    data.h \
-    renderarea.h \
-    data.hpp
+    renderarea.h
 
 FORMS    += mainwindow.ui
 
