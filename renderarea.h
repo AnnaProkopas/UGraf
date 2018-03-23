@@ -49,8 +49,9 @@ private:
     QBrush brush;
     std::list<std::pair<QPoint *, int>> points;
     std::vector<std::pair<QPoint *, int>> drawing;
-    QImage panel;
-
+    //QImage panel;
+    std::list<std::pair<QPoint, bool>> addr[200][200];
+    //bool: dot(true) or edge (false)
     uint32_t sizeL = 0;
     QSize sizeW;
     bool antialiased;
@@ -58,6 +59,7 @@ private:
 
     /*static */void search(QPoint pos);
     QPoint* resetSize(QPoint * & p, uint32 s);
+    int addEdge(QPoint b, QPoint e, int last);
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
