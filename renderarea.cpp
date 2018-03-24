@@ -188,6 +188,7 @@ void RenderArea::search(QPoint pos){
                     LOOK[0] = (*it).first;
                     LOOK[1].rx() = -1;
                     std::cout << "dot: " << pos.x() << " " << pos.y() << std::endl;
+                    update();
                     /*QPainter painter(this);
                     painter.setPen(QColor(0, 255, 0, 255));
                     painter.setBrush(QColor(255, 0, 0, 170));
@@ -195,7 +196,10 @@ void RenderArea::search(QPoint pos){
                     return;
                 }
             }
-            else if (pos.y() >= (*it).first.y()*Zoom - Shift.y() && pos.y() <= (*it).second.y()*Zoom - Shift.y()){
+            else if (((*it).first.y() == (*it).second.y() &&
+abs((*it).first.x()*Zoom - Shift.x() - pos.x()) +  abs((*it).second.x()*Zoom - Shift.x() - pos.x()) <=
+                      5 + abs(((*it).first.x() - (*it).second.x())*Zoom))||
+                     (pos.y() >= (*it).first.y()*Zoom - Shift.y() && pos.y() <= (*it).second.y()*Zoom - Shift.y())){
                 int ty = -1;
                 if ((*it).first.x() != (*it).second.x()){
                     ty = ((Shift.x() + pos.x())*((*it).first.y() - (*it).second.y()) / Zoom +(*it).first.x()*(*it).second.y() -
@@ -207,6 +211,7 @@ void RenderArea::search(QPoint pos){
                     LOOK[0] = (*it).second;
                     LOOK[1] = (*it).first;
                     std::cout << "edge: " << pos.x() << " " << pos.y() << std::endl;
+                    update();
                     /*QPainter painter(this);
                     painter.setPen(QColor(0, 255, 0, 255));
                     painter.setBrush(QColor(255, 0, 0, 170));
