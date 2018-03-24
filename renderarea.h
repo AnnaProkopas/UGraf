@@ -40,7 +40,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    static const uint32 cZoom = 170;
+    static const uint32 cZoom = 350;
     int Xmin, Ymin, Xmax, Ymax;
     double Zoom = 1;
     QPoint Shift = QPoint(0, 0), PressPont;
@@ -49,14 +49,15 @@ private:
     QBrush brush;
     std::list<std::pair<QPoint *, int>> points;
     std::vector<std::pair<QPoint *, int>> drawing;
-    //QImage panel;
-    std::list<std::pair<QPoint, bool>> addr[200][200];
+    QImage panel;
+    std::list<std::pair<QPoint, QPoint>> addr[200][200];
     //bool: dot(true) or edge (false)
     uint32_t sizeL = 0;
     QSize sizeW;
+    QPoint LOOK[2];
     bool antialiased;
     bool transformed;
-
+    bool panel_change = true;
     /*static */void search(QPoint pos);
     QPoint* resetSize(QPoint * & p, uint32 s);
     int addEdge(QPoint b, QPoint e, int last);

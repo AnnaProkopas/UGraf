@@ -4,55 +4,48 @@
 #include <QPainter>
 
 RenderArea::RenderArea(QWidget *parent)
-    : QWidget(parent)
-{
+    : QWidget(parent){
     antialiased = false;
     transformed = false;
 
-    //panel = QImage(QSize(width(),height()),QImage::Format_RGB32);
-
+    panel = QImage(QSize(width(),height()),QImage::Format_RGB32);
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
     sizeW = QSize(2000, 2000);
+
+    LOOK[0] = QPoint(-1, 0);
 }
 
-QSize RenderArea::minimumSizeHint() const
-{
+QSize RenderArea::minimumSizeHint() const{
     return QSize(200, 200);
 }
 
-QSize RenderArea::sizeHint() const
-{
+QSize RenderArea::sizeHint() const{
     return QSize(300, 300);
 }
 
 
-void RenderArea::setPen(const QPen &pen)
-{
+void RenderArea::setPen(const QPen &pen){
     this->pen = pen;
     update();
 }
 
-void RenderArea::setBrush(const QBrush &brush)
-{
+void RenderArea::setBrush(const QBrush &brush){
     this->brush = brush;
     update();
 }
 
-void RenderArea::setAntialiased(bool antialiased)
-{
+void RenderArea::setAntialiased(bool antialiased){
     this->antialiased = antialiased;
     update();
 }
 
-void RenderArea::setTransformed(bool transformed)
-{
+void RenderArea::setTransformed(bool transformed){
     this->transformed = transformed;
     update();
 }
 
 void RenderArea::plot(t_real* &nX, t_real* &nY, uint32_t k1, uint32_t k2, uint32_t _size, uint32 isCircle){
-    //int hx = Xmax / 200, hy = Ymax / 200;
     points.push_back(std::make_pair(new QPoint[_size], _size));
     sizeL = points.size();
     int last = -1;
@@ -65,9 +58,8 @@ void RenderArea::plot(t_real* &nX, t_real* &nY, uint32_t k1, uint32_t k2, uint32
     if (isCircle){
         points.back().first[_size - 1] =  points.back().first[0];
         last = addEdge(points.back().first[_size - 2], points.back().first[_size - 1], last);
-        //points.back().second++;
     }
-    //update();
+    panel_change =true;
 }
 
 int RenderArea::addEdge(QPoint b, QPoint e, int last){
@@ -75,42 +67,20 @@ int RenderArea::addEdge(QPoint b, QPoint e, int last){
     b = (b + Shift)/Zoom; e = (e + Shift) / Zoom;
     int vert = (Ymin + Ymax) / 199, hor = (Xmin + Xmax) / 199;
     if (last > 0)
-       addr[b.y() / vert][b.x() / hor].push_back(std::make_pair(b, true));
-    //std::cout << b.y() / vert << " " << b.x() / hor << "\n";
-    addr[e.y() / vert][e.x() / hor].push_back(std::make_pair(e, true));
-    addr[b.y() / vert][b.x() / hor].push_back(std::make_pair(b, false));
-    //std::cout << e.y() / vert << " " << e.x() / hor << "\n";
+       addr[b.y() / vert][b.x() / hor].push_back(std::make_pair(b, b));
+    addr[e.y() / vert][e.x() / hor].push_back(std::make_pair(e, e));
+    if (b.y() < e.y())
+        addr[b.y() / vert][b.x() / hor].push_back(std::make_pair(b, e));
+    else addr[b.y() / vert][b.x() / hor].push_back(std::make_pair(e, b));
     QPoint move = b - e;
-    for (int i = e.y() / vert; i != b.y() / vert; i += (move.y() > 0) ? 1 : -1)
-        for (int j = e.x() / hor; j != b.x() / hor; j += (move.x() > 0) ? 1 : -1)
-             addr[i][j].push_back(std::make_pair(b, false));
-
-    /*double h = height() / 199, w = width() / 199;
-    double k = (e->y() - b->y()) / (e->x() - b->x()), k1 = b->y() - b->x() * k;
-    if (jl * w * k + k1 > (il + ((move.y() > 0) ? - 1 : 0)) * h)
-        if (move.y() > 0){
-            addr[il][jl + (move.x() > 0) ? 1 : -1].push_back(std::make_pair(b, false));
-        }
-        else
-            addr[++il][jl].push_back(std::make_pair(b, false));
-    /*int move_x = (move.x() > 0) ? (move.x() == 0) ? 0 : 1 : -1, move_y = (move.y() > 0) ? (move.x() == 0) ? 0 : 1 : -1;
-    if (move_x == 0 && move_y == 0){
-        addr[il][jl].push_back(std::make_pair(e, true));
-        return result;
-    }
-    ir = il + move_y; jr = jl + move_x;
-    int k = (e->y() - b->y()) / (e->x() - b->x()), k1 = b->y() - b->x() * k;
-    bool br1 = false, br2 = false;
-    while (!br1 || !br2){
-        if (e->y() < ir) {ir -= move_y; br1 = true;}
-        else{
-
-        }
-        if (e->x() < jr) {jr -= move_x; br2 = true;}
-
-    }
-    /*int k = (e->y() - b->y()) / (e->x() - b->x()), k1 = b->y() - b->x() * k;
-    int y = e->x()*k + k1;*/
+    if (b.y() < e.y())
+        for (int i = e.y() / vert; i != b.y() / vert; i += (move.y() > 0) ? 1 : -1)
+            for (int j = e.x() / hor; j != b.x() / hor; j += (move.x() > 0) ? 1 : -1)
+                addr[b.y() / vert][b.x() / hor].push_back(std::make_pair(b, e));
+    else
+        for (int i = e.y() / vert; i != b.y() / vert; i += (move.y() > 0) ? 1 : -1)
+            for (int j = e.x() / hor; j != b.x() / hor; j += (move.x() > 0) ? 1 : -1)
+                addr[b.y() / vert][b.x() / hor].push_back(std::make_pair(e, b));
     return result;
 }
 
@@ -122,9 +92,6 @@ void RenderArea::getMin(double mX, double mY){
 void RenderArea::getMax(double mX, double mY){
     Xmax = (int)(cZoom*mX) - Xmin;
     Ymax = (int)(cZoom*mY) - Ymin;
-    /*if (Xmax > Ymax)
-        cZoom = (int)(70*width()/Xmax);
-    else cZoom = (int)(70*height()/Ymax);*/
     Xmax = (int)(cZoom*(mX - Xmin/70));
     Ymax = (int)(cZoom*(mY - Ymin/70));
     max = QPoint(Xmax, Ymax);
@@ -134,28 +101,16 @@ QPoint RenderArea::getShift(QPoint now, double last){
     return (now + Shift)/last*Zoom - now;
 }
 
-void RenderArea::paintEvent(QPaintEvent * /* event */)
-{
+void RenderArea::paintEvent(QPaintEvent * /* event */){
     sizeW = QSize(width(), height());
-    //QPainter paintI(&panel);
     QPainter painter(this);
-    painter.setPen(pen); //paintI.setPen(pen);
-    painter.setBrush(brush); //paintI.setBrush(brush);
-    /*if (antialiased){
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        paintI.setRenderHint(QPainter::Antialiasing, true);
-    }*/
+    QPainter paintI(&panel);
+    painter.setPen(pen); paintI.setPen(pen);
+    painter.setBrush(brush); paintI.setBrush(brush);
     int x = 0, y = 0;
-    painter.save(); //paintI.save();
-    painter.translate(x, y); //paintI.translate(x, y);
-            /*if (transformed) {
-                painter.translate(50, 50);
-                painter.rotate(60.0);
-                painter.scale(0.6, 0.9);
-                painter.translate(-50, -50);
-            }*/
-    painter.restore(); //paintI.restore();
-    //resetSize();
+    painter.save(); paintI.save();
+    painter.translate(x, y); paintI.translate(x, y);
+    painter.restore(); paintI.restore();
     if (sizeL > 2){
         int i = 0, r = 0, g = 0, b = 0;
         drawing.clear();
@@ -178,130 +133,94 @@ void RenderArea::paintEvent(QPaintEvent * /* event */)
                         else if (i < 225) g += 5;
                     }
                 }
-            //std::cout << r << " " << g  << " " << b << "\n";
             painter.setPen(QColor(r, g, b, 150));
             painter.drawPolyline(drawing.back().first, drawing.back().second);
             painter.setPen(QColor(0, 0, 0, 70));
-            if (i == 1)
-                painter.setPen(QColor(255, 0, 0, 255));
+            //if (i == 1)
+            //    painter.setPen(QColor(255, 0, 0, 255));
             painter.drawPoints(drawing.back().first, drawing.back().second);
-            /*if (Shift == QPoint(0,0)){
-                paintI.setPen(QColor(r, g, b, 70));
-                paintI.drawPolyline((*it).first, (*it).second);
+            if (panel_change){
+                paintI.setPen(QColor(r, g, b, 150));
+                paintI.drawPolyline(drawing.back().first, drawing.back().second);
                 paintI.setPen(QColor(0, 0, 0, 70));
-                paintI.drawPoints((*it).first, (*it).second);
+                paintI.drawPoints(drawing.back().first, drawing.back().second);
             }
             /*for(int r1 = 0; r1 < 3; r1 ++){
                 //RGB[r1] = 2 *( (l * hc >= dc) ? (l * hc - dc):0);
                 //RGB[r1] = (RGB <= 1).* RGB + (RGB > 1);????????
             }/*/
         }
-        //std::cout << i << "\n";
     }
-    /*if (sizeL > 2){
-        int i = 0;
-        drawing.clear();
-        for (std::list<std::pair<QPoint *, int>>::iterator it=points.begin(); it != points.end(); i++, ++it){
-            drawing.push_back(std::make_tuple(new QPoint[(*it).second], (*it).second, i,
-                              (*it).first[0]*Zoom - Shift, (*it).first[0]*Zoom - Shift));
-            for (int i0 = 0; i0 < (*it).second; i0++){
-                std::get<0>(drawing.back())[i0] = (*it).first[i0]*Zoom - Shift;
-                if (std::get<3>(drawing.back()).x() > std::get<0>(drawing.back())[i0].x())
-                    std::get<3>(drawing.back()).setX(std::get<0>(drawing.back())[i0].x());
-                else if (std::get<4>(drawing.back()).x() < std::get<0>(drawing.back())[i0].x())
-                    std::get<4>(drawing.back()).setX(std::get<0>(drawing.back())[i0].x());
-                if (std::get<3>(drawing.back()).y() > std::get<0>(drawing.back())[i0].y())
-                    std::get<3>(drawing.back()).setY(std::get<0>(drawing.back())[i0].y());
-                else if (std::get<4>(drawing.back()).y() < std::get<0>(drawing.back())[i0].y())
-                    std::get<4>(drawing.back()).setY(std::get<0>(drawing.back())[i0].y());
-            }
-            painter.setPen(QColor(4*i % 255, 0, 0, 70));
-            painter.drawPolyline(std::get<0>(drawing.back()), std::get<1>(drawing.back()));
-            painter.setPen(QColor(0, 0, 4*i % 255, 200));
-            painter.drawPoints(std::get<0>(drawing.back()), std::get<1>(drawing.back()));
-            /*for(int r1 = 0; r1 < 3; r1 ++){
-                //RGB[r1] = 2 *( (l * hc >= dc) ? (l * hc - dc):0);
-                //RGB[r1] = (RGB <= 1).* RGB + (RGB > 1);????????
-            }/
+    painter.setPen(QColor(0, 255, 0, 255));
+    painter.setBrush(QColor(255, 0, 0, 170));
+    if (LOOK[0].x() > 0){
+        painter.drawEllipse(LOOK[0]*Zoom - Shift, 5, 5);
+        if (LOOK[1].x() > 0){
+            painter.drawEllipse(LOOK[1]*Zoom - Shift, 5, 5);
+            painter.setPen(QColor(150, 150, 0, 255));
+            painter.drawRect(QRect(LOOK[0]*Zoom - Shift, LOOK[1]*Zoom - Shift));
         }
-    }*/
+    }
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setPen(palette().dark().color());
     painter.setBrush(Qt::NoBrush);
-    //painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
+    panel_change = false;
 }
 
 
 void RenderArea::mousePressEvent(QMouseEvent *event) {
     PressPont = event->pos();
     search(event->pos());
-    //QRgb readback = panel.pixel((event->pos()+Shift)/Zoom);
-   // std::cout << readback << "\n";
-    //setPen(QColor().fromRgb(readback));
-    /*std::thread thr(RenderArea::search, this, event->pos());
-    thr.detach();//
-    QColor now = QColor(readback);
-    int r, g, b, i = 0;
-    r = now.red() / 5; g = now.green() / 5; b = now.blue() / 5;
-    if (r == 0)
-        if(g == 0)
-            i = b + 1;
-        else i = 45 + g;
-    else if (b == 0)
-        if (g == 0)
-            i = 135 + r;
-        else i = 180 + g;
-    else i = 90 + r;
-    std::cout << "rgb -> " << i << "\n";
-    search(event->pos());*/
 }
 
 void RenderArea::search(QPoint pos){
-    int j1 = 0;
-        for (std::vector<std::pair<QPoint *, int>>::iterator it = drawing.begin(); it != drawing.end(); j1++, it++){
-                for (int i = 0; i < (*it).second; i++)
-                    if (pos.x() < ((*it).first[i].x() + 5) && pos.x() > ((*it).first[i].x() - 5)){
-                        std::cout << "->>> " << (Shift + pos).x() / Zoom<< ": " << (Shift + pos).y() / Zoom << "\n";
-                        goto label;
-                    }
-            }
-        label:
-    pos = (Shift + pos) / Zoom;
+//    pos = (Shift + pos) / Zoom;
     int vert = (Ymin + Ymax) / 199, hor = (Xmin + Xmax) / 199;
-    int i = pos.y() / vert, j = pos.x() / hor;
+    int i = (Shift + pos).y() / vert / Zoom, j = (Shift + pos).x() / hor / Zoom;
     if (i > 200 || j > 200)
         std::cout << "Error, i: " << i << " j: " << j << "\n";
     else{
         std::cout << "!!! : " << i << " " << j << "\n";
-        for (std::list<std::pair<QPoint, bool>>::iterator it=addr[i][j].begin(); it != addr[i][j].end(); ++it){
-            if ((*it).second)
-                std::cout << "dot: ";
-            else std::cout << "edge: ";
-            std::cout << (*it).first.x();
-            std::cout << " - " << (*it).first.y() << "\n";
-        }
-    }
-}
-
-/*    int j = 0;
-    for (std::vector<std::pair<QPoint *, int>>::iterator it = drawing.begin(); it != drawing.end(); j++, it++){
-            for (int i = 0; i < (*it).second; i++)
-                if (pos.x() < ((*it).first[i].x() + 5) && pos.x() > ((*it).first[i].x() - 5)){
-                    std::cout << j + 1 << ": " << i + 1 << "\n";
+        for (std::list<std::pair<QPoint, QPoint>>::iterator it=addr[i][j].begin(); it != addr[i][j].end(); ++it)
+            if ((*it).first == (*it).second){
+                if (abs(pos.x() - (*it).first.x()*Zoom - Shift.x()) < 3 &&
+                        abs(pos.y() - (*it).first.y()*Zoom - Shift.y()) < 3){
+                    LOOK[0] = (*it).first;
+                    LOOK[1].rx() = -1;
+                    std::cout << "dot: " << pos.x() << " " << pos.y() << std::endl;
+                    /*QPainter painter(this);
+                    painter.setPen(QColor(0, 255, 0, 255));
+                    painter.setBrush(QColor(255, 0, 0, 170));
+                    painter.drawEllipse((*it).first * Zoom - Shift, 5, 5);*/
                     return;
                 }
-        }
-    /*a = (y2 - y1) / (x2 - x1);
-    b = y1 - x1 * a;*/
-   /* for (std::list<std::tuple<QPoint *, int, int, QPoint, QPoint>>::iterator it = drawing.begin();
-    * it != drawing.end(); it++){
-        for (int i = 0; i < std::get<1>(*it); i++)
-            if (pos.x() < (std::get<0>(*it)[i].x() + 5) && pos.x() > (std::get<0>(*it)[i].x() - 5)){
-                std::cout << i << "\n";
-                return;
             }
+            else if (pos.y() >= (*it).first.y()*Zoom - Shift.y() && pos.y() <= (*it).second.y()*Zoom - Shift.y()){
+                int ty = -1;
+                if ((*it).first.x() != (*it).second.x()){
+                    ty = ((Shift.x() + pos.x())*((*it).first.y() - (*it).second.y()) / Zoom +(*it).first.x()*(*it).second.y() -
+                      (*it).second.x()*(*it).first.y())/((*it).first.x() - (*it).second.x());
+                    std::cout << "----: " << (*it).first.y() << " " << (*it).second.y() << std::endl;
+                }
+                std::cout << ty*Zoom - Shift.y() << " " << pos.y()<< std::endl;
+                if ((abs(ty - (Shift.y() + pos.y()) / Zoom) < 5 || ty == -1) && ty >= (*it).first.y() && ty <= (*it).second.y()){
+                    LOOK[0] = (*it).second;
+                    LOOK[1] = (*it).first;
+                    std::cout << "edge: " << pos.x() << " " << pos.y() << std::endl;
+                    /*QPainter painter(this);
+                    painter.setPen(QColor(0, 255, 0, 255));
+                    painter.setBrush(QColor(255, 0, 0, 170));
+                    painter.drawEllipse((*it).first * Zoom - Shift, 5, 5);
+                    painter.drawEllipse((*it).second * Zoom - Shift, 5, 5);
+                    painter.setPen(QColor(150, 150, 0, 255));
+                    painter.drawRect(QRect(LOOK[0], LOOK[1]));*/
+                    return;
+                }
+            }
+            //std::cout << (*it).first.x();
+            //std::cout << " - " << (*it).first.y() << "\n";
     }
-}*/
+}
 
 void RenderArea::mouseMoveEvent(QMouseEvent *event) {
     Shift += PressPont - event->pos();
@@ -318,8 +237,6 @@ void RenderArea::wheelEvent(QWheelEvent *event) {
         Zoom *= 1.5;
     else
         Zoom /= 1.5;
-    /*std::cout << event->globalX() << "  " << event->globalY() << "\n";
-    std::cout << width() << "  " << height() << "\n";*/
     Shift = getShift(event->pos(), lZ);
     update();
 }
