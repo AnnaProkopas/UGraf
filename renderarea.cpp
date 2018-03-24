@@ -183,8 +183,7 @@ void RenderArea::search(QPoint pos){
         std::cout << "!!! : " << i << " " << j << "\n";
         for (std::list<std::pair<QPoint, QPoint>>::iterator it=addr[i][j].begin(); it != addr[i][j].end(); ++it)
             if ((*it).first == (*it).second){
-                if (abs(pos.x() - (*it).first.x()*Zoom - Shift.x()) < 3 &&
-                        abs(pos.y() - (*it).first.y()*Zoom - Shift.y()) < 3){
+                if ((pos - (*it).first*Zoom + Shift).manhattanLength() < 3){
                     LOOK[0] = (*it).first;
                     LOOK[1].rx() = -1;
                     std::cout << "dot: " << pos.x() << " " << pos.y() << std::endl;
