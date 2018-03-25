@@ -195,7 +195,40 @@ void RenderArea::search(QPoint pos){
                     return;
                 }
             }
-            else if (((*it).first.y() == (*it).second.y() &&
+            else if (abs((*it).first.x() - (*it).second.x()) < 2 && abs((*it).first.x()*Zoom - Shift.x() - pos.x()) < 2){
+                int f = (*it).first.y()*Zoom - Shift.y(), s = (*it).second.y()*Zoom - Shift.y();
+                if (abs(pos.y() - f) + abs(pos.y() - s) <= 2 + abs(f - s)){
+                    LOOK[0] = (*it).second;
+                    LOOK[1] = (*it).first;
+                    std::cout << "edge: " << pos.x() << " " << pos.y() << std::endl;
+                    update();
+                    return;
+                }
+            }
+            else if (abs((*it).first.y() - (*it).second.y()) < 2 && abs((*it).first.y()*Zoom - Shift.y() - pos.y()) < 2){
+                int f = (*it).first.x()*Zoom - Shift.x(), s = (*it).second.x()*Zoom - Shift.x();
+                if (abs(pos.x() - f) + abs(pos.x() - s) <= 2 + abs(f - s)){
+                    LOOK[0] = (*it).second;
+                    LOOK[1] = (*it).first;
+                    std::cout << "edge: " << pos.x() << " " << pos.y() << std::endl;
+                    update();
+                    return;
+                }
+            }
+            else if ((pos - (*it).first*Zoom + Shift).manhattanLength() +
+                     (pos - (*it).second*Zoom + Shift).manhattanLength() <=
+                     2 + (((*it).second - (*it).first)*Zoom).manhattanLength()) {
+                    QPoint f = (*it).first*Zoom - Shift, s = (*it).second*Zoom - Shift;
+                    int y = (pos.x() * (f.y() - s.y()) + f.x() * s.y() - s.x() * f.y())/(f.x() - s.x());
+                    if (abs(pos.y() - y) < 7){
+                        LOOK[0] = (*it).second;
+                        LOOK[1] = (*it).first;
+                        std::cout << "edge: " << pos.x() << " " << pos.y() << std::endl;
+                        update();
+                        return;
+                    }
+            }
+                /*if (((*it).first.y() == (*it).second.y() &&
 abs((*it).first.x()*Zoom - Shift.x() - pos.x()) +  abs((*it).second.x()*Zoom - Shift.x() - pos.x()) <=
                       5 + abs(((*it).first.x() - (*it).second.x())*Zoom))||
                      (pos.y() >= (*it).first.y()*Zoom - Shift.y() && pos.y() <= (*it).second.y()*Zoom - Shift.y())){
@@ -219,8 +252,8 @@ abs((*it).first.x()*Zoom - Shift.x() - pos.x()) +  abs((*it).second.x()*Zoom - S
                     painter.setPen(QColor(150, 150, 0, 255));
                     painter.drawRect(QRect(LOOK[0], LOOK[1]));*/
                     return;
-                }
-            }
+                //}
+            //}
             //std::cout << (*it).first.x();
             //std::cout << " - " << (*it).first.y() << "\n";
     }
