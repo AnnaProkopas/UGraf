@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "data.h"
+
 #include <QWidget>
 #include <QPainter>
 #include <QtWidgets>

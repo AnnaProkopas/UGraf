@@ -2,6 +2,8 @@
 #ifndef RENDERAREA_H
 #define RENDERAREA_H
 
+#include "data.h"
+
 #include <QPainter>
 #include <QBrush>
 #include <QPen>
@@ -10,6 +12,7 @@
 #include <QWheelEvent>
 #include <thread>
 #include <QImage>
+#include <QPoint>
 
 typedef uint32_t uint32;
 typedef unsigned char uchar;
@@ -33,6 +36,8 @@ public slots:
     void setAntialiased(bool antialiased);
     void setTransformed(bool transformed);
     void plot(t_real* &nX, t_real* &nY, uint32_t k1, uint32_t k2, uint32_t _size, uint32 isCircle);
+    void plot(t_node &node, t_cont &cont, t_step &step, t_size num_s);
+
     void getMin(double mX, double mY);
     void getMax(double mX, double mY);
     QPoint getShift(QPoint now, double last);
@@ -40,8 +45,9 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    static const uint32 cZoom = 350;
+    /*const*/ size_t cZoom = 350;//добавить алгоритм вычисления - в зависимости от max-min
     int Xmin, Ymin, Xmax, Ymax;
+    QPointF gMin, gMax;
     double Zoom = 1;
     QPoint Shift = QPoint(0, 0), PressPont;
     QPoint max;
@@ -61,6 +67,7 @@ private:
     /*static */void search(QPoint pos);
     QPoint* resetSize(QPoint * & p, uint32 s);
     int addEdge(QPoint b, QPoint e, int last);
+    void chooseCZoom(size_t size);
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

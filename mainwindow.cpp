@@ -6,28 +6,15 @@
 
 const int IdRole = Qt::UserRole;
 
-MainWindow::MainWindow()
-    //: textEdit(new QPlainTextEdit)
-{
-    //'RGB', QPoint(width(), height()), colorname);
+MainWindow::MainWindow() {
     renderArea = new RenderArea();
 
     setCentralWidget(renderArea);
-
-    //QGridLayout *mainLayout = new QGridLayout;
-    //mainLayout->addWidget(renderArea, 0, 0, 1, 4);
-    //setLayout(mainLayout);
     createActions();
     fileMenu = menuBar()->addMenu(tr("&File"));
-   // fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
     setWindowTitle(tr("UGraf"));
-
-/*    infoLabel = new QLabel(tr("<i>Choose a menu option, or right-click to "
-                                  "invoke a context menu</i>"));
-    infoLabel->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-    infoLabel->setAlignment(Qt::AlignCenter);*/
 }
 
 MainWindow::~MainWindow()
@@ -36,8 +23,7 @@ MainWindow::~MainWindow()
 }
 
 #ifndef QT_NO_CONTEXTMENU
-void MainWindow::contextMenuEvent(QContextMenuEvent *event)
-{
+void MainWindow::contextMenuEvent(QContextMenuEvent *event) {
     /*QMenu menu(this);
     menu.addAction(cutAct);
     menu.addAction(copyAct);
@@ -47,7 +33,7 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 #endif // QT_NO_CONTEXTMENU
 
 void MainWindow::read(){
-    std::ifstream fid ("/home/user/UGraf/cont+02.dat", std::ios::binary);
+    /*std::ifstream fid ("/home/user/UGraf/cont+02.dat", std::ios::binary);
     if (!fid){
         std::cout << "Файл не найден";
         return;
@@ -105,7 +91,59 @@ void MainWindow::read(){
             uint32 k1 = CONTI[i], k2 = (k1 + CONTN[i]) - 2;
             renderArea->plot(NODEX, NODEY, k1, k2, k2 - k1 + 1 + (CONTS[i] ? 1:0), CONTS[i]);
         }
-    }
+    }*/
+    //std::ifstream fid ("/home/user/UGraf/pvort.dat", std::ios::binary);
+    std::ifstream fid ("/home/user/UGraf/cont+01.dat", std::ios::binary);
+      if (!fid){
+          std::cout << "Файл не найден";
+          return;
+      }
+      t_real min_x, min_y, max_x, max_y;
+      uint32_t num_t, num_p, num_c, num_s;
+      fid.read((char *)&min_x, sizeof(double));
+      fid.read((char *)&min_y, sizeof(double));
+      fid.read((char *)&max_x, sizeof(double));
+      fid.read((char *)&max_y, sizeof(double));
+      fid.read((char *)&num_t, sizeof(uint32));
+      fid.read((char *)&num_p, sizeof(uint32));
+              t_node NODE = t_node(num_p);
+              t_real temp;
+
+              for(uint32 i = 0; i < num_p; i++){
+                  fid.read((char *)&temp, sizeof(double));
+                  NODE[0](i) = temp;
+              }
+              for(uint32 i = 0; i < num_p; i++){
+                  fid.read((char *)&temp, sizeof(double));
+                  NODE[1](i) = temp;
+              }
+              fid.read((char *)&num_c, sizeof(uint32));
+              t_cont CONT = t_cont(num_c);
+              for(uint32 i = 0, t1; i < num_c; i++){
+                  fid.read((char *)&t1, sizeof(uint32));
+                  CONT[0](i) = t1;
+              }
+              for(uint32 i = 0, t1; i < num_c; i++){
+                  fid.read((char *)&t1, sizeof(uint32));
+                  CONT[1](i) = t1;
+              }
+              for(uint32 i = 0, c; i < num_c; i++){
+                  fid.read((char *)&c, sizeof(char));
+                  CONT(i) = c;
+              }
+              fid.read((char *)&num_s, sizeof(uint32));
+              t_step STEP = t_step(num_s);
+              for(uint32 i = 0, t1; i < num_s; i++){
+                  fid.read((char *)&t1, sizeof(uint32));
+                  STEP[0](i) = t1;
+              }
+              for(uint32 i = 0, t1; i < num_s; i++){
+                  fid.read((char *)&t1, sizeof(uint32));
+                  STEP[1](i) = t1;
+              }
+              renderArea->getMin(min_x, min_y);
+              renderArea->getMax(max_x, max_y);
+              renderArea->plot(NODE, CONT, STEP, num_s);
 }
 
 void MainWindow::createActions(){
@@ -123,13 +161,13 @@ void MainWindow::createActions(){
 void MainWindow::open(){   
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open Data file or Specific file"), "",
-        tr("Data file (*.bin);;Specific file (*.sp);;All Files (*)"));
+        tr("Data file (*.bin);;Data file (*.dat);;All Files (*)"));
 }
 
 void MainWindow::save(){
     QString fileName = QFileDialog::getSaveFileName(this,
-          tr("Save Address Book"), "",
-          tr("Address Book (*.abk);;All Files (*)"));
+          tr("Save Image"), "",
+          tr("Image (*.jpg);;All Files (*)"));
 }
 
 bool MainWindow::keypres(QKeyEvent *keyevent){
