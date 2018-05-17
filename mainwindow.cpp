@@ -6,15 +6,28 @@
 
 const int IdRole = Qt::UserRole;
 
-MainWindow::MainWindow() {
+MainWindow::MainWindow()
+    //: textEdit(new QPlainTextEdit)
+{
+    //'RGB', QPoint(width(), height()), colorname);
     renderArea = new RenderArea();
 
     setCentralWidget(renderArea);
+
+    //QGridLayout *mainLayout = new QGridLayout;
+    //mainLayout->addWidget(renderArea, 0, 0, 1, 4);
+    //setLayout(mainLayout);
     createActions();
     fileMenu = menuBar()->addMenu(tr("&File"));
+   // fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
     setWindowTitle(tr("UGraf"));
+
+/*    infoLabel = new QLabel(tr("<i>Choose a menu option, or right-click to "
+                                  "invoke a context menu</i>"));
+    infoLabel->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
+    infoLabel->setAlignment(Qt::AlignCenter);*/
 }
 
 MainWindow::~MainWindow()
@@ -23,7 +36,8 @@ MainWindow::~MainWindow()
 }
 
 #ifndef QT_NO_CONTEXTMENU
-void MainWindow::contextMenuEvent(QContextMenuEvent *event) {
+void MainWindow::contextMenuEvent(QContextMenuEvent *event)
+{
     /*QMenu menu(this);
     menu.addAction(cutAct);
     menu.addAction(copyAct);
@@ -92,8 +106,7 @@ void MainWindow::read(){
             renderArea->plot(NODEX, NODEY, k1, k2, k2 - k1 + 1 + (CONTS[i] ? 1:0), CONTS[i]);
         }
     }*/
-    //std::ifstream fid ("/home/user/UGraf/pvort.dat", std::ios::binary);
-    std::ifstream fid ("/home/user/UGraf/cont+01.dat", std::ios::binary);
+    std::ifstream fid ("/home/user/UGraf/cont+03.dat", std::ios::binary);
       if (!fid){
           std::cout << "Файл не найден";
           return;

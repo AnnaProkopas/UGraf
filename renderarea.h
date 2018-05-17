@@ -4,6 +4,8 @@
 
 #include "data.h"
 
+#include <cmath>
+
 #include <QPainter>
 #include <QBrush>
 #include <QPen>
@@ -13,6 +15,7 @@
 #include <thread>
 #include <QImage>
 #include <QPoint>
+#include <QLabel>
 
 typedef uint32_t uint32;
 typedef unsigned char uchar;
@@ -35,12 +38,13 @@ public slots:
     void setBrush(const QBrush &brush);
     void setAntialiased(bool antialiased);
     void setTransformed(bool transformed);
-    void plot(t_real* &nX, t_real* &nY, uint32_t k1, uint32_t k2, uint32_t _size, uint32 isCircle);
+    //void plot(t_real* &nX, t_real* &nY, uint32_t k1, uint32_t k2, uint32_t _size, uint32 isCircle);
     void plot(t_node &node, t_cont &cont, t_step &step, t_size num_s);
 
     void getMin(double mX, double mY);
     void getMax(double mX, double mY);
     QPoint getShift(QPoint now, double last);
+    std::string nowChoose();
 protected:
     void paintEvent(QPaintEvent *event) override;
 
@@ -64,6 +68,7 @@ private:
     bool antialiased;
     bool transformed;
     bool panel_change = true;
+    bool choosed = false;
     /*static */void search(QPoint pos);
     QPoint* resetSize(QPoint * & p, uint32 s);
     int addEdge(QPoint b, QPoint e, int last);
