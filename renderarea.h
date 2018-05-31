@@ -60,7 +60,19 @@ private:
     std::list<std::pair<QPoint *, int>> points;
     std::vector<std::pair<QPoint *, int>> drawing;
     QImage panel;
-    std::list<std::pair<QPoint, QPoint>> addr[200][200];
+    struct cell{
+        QPoint pair[2];
+        //t_field &circuit;
+        int p1, p2, cont, step;
+        uint32_t rgb;
+        //cell(QPoint b, QPoint e, /*t_field &f,*/ int _p1, int _p2, int c, int s, uint32_t col) : pair({b, e}),// circuit(f),
+        //    p1(_p1), p2(_p2), cont(c), step(s), rgb(col) { }
+        cell(QPoint b, QPoint e, int _p1, int _p2, int c, int s, uint32_t col) : pair({b, e}),
+            p1(_p1), p2(_p2), cont(c), step(s), rgb(col) {}
+        QPoint first() { return pair[0]; }
+        QPoint second() { return pair[1]; }
+    };
+    std::list<cell> addr[200][200];
     //bool: dot(true) or edge (false)
     uint32_t sizeL = 0;
     QSize sizeW;
@@ -71,8 +83,9 @@ private:
     bool choosed = false;
     /*static */void search(QPoint pos);
     QPoint* resetSize(QPoint * & p, uint32 s);
-    int addEdge(QPoint b, QPoint e, int last);
+    int addEdge(QPoint b, QPoint e, int _p1, int _p2, int c, int s, uint32_t col);
     void chooseCZoom(size_t size);
+    void clearField();
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

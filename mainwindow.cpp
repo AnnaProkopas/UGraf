@@ -6,28 +6,37 @@
 
 const int IdRole = Qt::UserRole;
 
-MainWindow::MainWindow()
-    //: textEdit(new QPlainTextEdit)
-{
-    //'RGB', QPoint(width(), height()), colorname);
+MainWindow::MainWindow() {
     renderArea = new RenderArea();
+    chooseEdge = new QPlainTextEdit();
+    QWidget *wid, *widv = new QWidget(this);
+    QHBoxLayout *mainBox = new QHBoxLayout;
+    //QVBoxLayout *vBox = new QVBoxLayout;
+    QStackedWidget *vBox = new QStackedWidget;
+    listEdge = new QListWidget;
+    timeSlider = new QSlider(Qt::Horizontal);
+    vBox->addWidget(listEdge);
+    vBox->addWidget(timeSlider);
+    //widv->setLayout(vBox);
 
-    setCentralWidget(renderArea);
+    mainBox->addWidget(renderArea);
+    mainBox->addWidget(vBox);
+    QSizePolicy spLeft(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    spLeft.setHorizontalStretch(4);
+    renderArea->setSizePolicy(spLeft);
+    QSizePolicy spRight(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    spRight.setHorizontalStretch(1);
+    widv->setSizePolicy(spRight);
 
-    //QGridLayout *mainLayout = new QGridLayout;
-    //mainLayout->addWidget(renderArea, 0, 0, 1, 4);
-    //setLayout(mainLayout);
+    setBaseSize(QSize(1200, 1200));
+    setWindowTitle(tr("UGraf"));
+    setCentralWidget(wid);
+    wid->setLayout(mainBox);
+
     createActions();
     fileMenu = menuBar()->addMenu(tr("&File"));
-   // fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
-    setWindowTitle(tr("UGraf"));
-
-/*    infoLabel = new QLabel(tr("<i>Choose a menu option, or right-click to "
-                                  "invoke a context menu</i>"));
-    infoLabel->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-    infoLabel->setAlignment(Qt::AlignCenter);*/
 }
 
 MainWindow::~MainWindow()
@@ -106,11 +115,12 @@ void MainWindow::read(){
             renderArea->plot(NODEX, NODEY, k1, k2, k2 - k1 + 1 + (CONTS[i] ? 1:0), CONTS[i]);
         }
     }*/
-    std::ifstream fid ("/home/user/UGraf/cont+03.dat", std::ios::binary);
+    std::ifstream fid ("/home/user/UGraf/pvort.dat", std::ios::binary);
       if (!fid){
           std::cout << "Файл не найден";
           return;
       }
+      //fid.seekg();
       t_real min_x, min_y, max_x, max_y;
       uint32_t num_t, num_p, num_c, num_s;
       fid.read((char *)&min_x, sizeof(double));
@@ -118,7 +128,8 @@ void MainWindow::read(){
       fid.read((char *)&max_x, sizeof(double));
       fid.read((char *)&max_y, sizeof(double));
       fid.read((char *)&num_t, sizeof(uint32));
-      fid.read((char *)&num_p, sizeof(uint32));
+      for (int t = 0; t < 1; ++t){
+              fid.read((char *)&num_p, sizeof(uint32));
               t_node NODE = t_node(num_p);
               t_real temp;
 
@@ -157,6 +168,7 @@ void MainWindow::read(){
               renderArea->getMin(min_x, min_y);
               renderArea->getMax(max_x, max_y);
               renderArea->plot(NODE, CONT, STEP, num_s);
+      }
 }
 
 void MainWindow::createActions(){

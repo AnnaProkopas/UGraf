@@ -30,10 +30,12 @@ public:
 private:
      QMenu *fileMenu;
      RenderArea *renderArea;
+     QPlainTextEdit *chooseEdge;
      QImage image;
      QAction *openAct;
      QAction *saveAct;
-     //QLabel *infoLabel;
+     QSlider *timeSlider;
+     QListWidget *listEdge;
 
      void open();
      void save();
