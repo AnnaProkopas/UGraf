@@ -9,24 +9,22 @@ const int IdRole = Qt::UserRole;
 MainWindow::MainWindow() {
     renderArea = new RenderArea();
     chooseEdge = new QPlainTextEdit();
-    QWidget *wid, *widv = new QWidget(this);
-    QHBoxLayout *mainBox = new QHBoxLayout;
-    //QVBoxLayout *vBox = new QVBoxLayout;
-    QStackedWidget *vBox = new QStackedWidget;
+    QWidget *wid = new QWidget(this);
+    QGridLayout *mainBox = new QGridLayout;
     listEdge = new QListWidget;
     timeSlider = new QSlider(Qt::Horizontal);
-    vBox->addWidget(listEdge);
-    vBox->addWidget(timeSlider);
-    //widv->setLayout(vBox);
 
-    mainBox->addWidget(renderArea);
-    mainBox->addWidget(vBox);
+    mainBox->addWidget(renderArea, 0, 0, 2, 1);
+    mainBox->addWidget(listEdge, 0, 1, 1, 1);
+    mainBox->addWidget(timeSlider, 1, 1, -1, -1);
     QSizePolicy spLeft(QSizePolicy::Preferred, QSizePolicy::Preferred);
     spLeft.setHorizontalStretch(4);
+    spLeft.setVerticalPolicy(QSizePolicy::MinimumExpanding);
     renderArea->setSizePolicy(spLeft);
     QSizePolicy spRight(QSizePolicy::Preferred, QSizePolicy::Preferred);
     spRight.setHorizontalStretch(1);
-    widv->setSizePolicy(spRight);
+    spRight.setVerticalPolicy(QSizePolicy::MinimumExpanding);
+    listEdge->setSizePolicy(spRight);
 
     setBaseSize(QSize(1200, 1200));
     setWindowTitle(tr("UGraf"));
