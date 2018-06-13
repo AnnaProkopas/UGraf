@@ -78,6 +78,7 @@ void RenderArea::plot(t_node &node, t_cont &cont, t_step &step){
     for (int i = 0; i < 200; ++i)
         for (int j = 0; j < 200; ++j)
             addr[i][j].clear();
+    look.clear();
     points.clear();
     double hc = 1.0 / step.size();
     for (uint32 l = 0; l < step.size(); l++){
@@ -85,19 +86,31 @@ void RenderArea::plot(t_node &node, t_cont &cont, t_step &step){
         QColor rgb = QColor(255*l*hc, 255*(l*hc >= 0.5)*(l*hc - 0.5), 255*(l*hc >= 1)*(l*hc - 1));
         for (uint32 i1 = step[0](l); i1 < step[0](l) + step[1](l); i1++){
             points.push_back(Circuit(cont[1](i1)+cont(i1), rgb));
-            int j = 0;
-            for(uint32 i = cont[0](i1); i < cont[0](i1) + cont[1](i1); i++, j++){
-                points.back().dots[j] = QPoint(cZoom*node[0](i) - xMin, cZoom*node[1](i) - yMin);
-                if (j > 0){
+            int j = 1;
+            points.back().dots[0] = cZoom*QPoint(node[0](cont[0](i1)), node[1](cont[0](i1)));
+            for(uint32 i = cont[0](i1)+1; i < cont[0](i1) + cont[1](i1); i++, j++){
+                /*dx1 = (x2 - x1);
+                dx2 = dx1 - sign(dx1) * (max_x - min_x);
+                if (fabs(dx1) < fabs(dx2))
+                dx = dx1;
+                else
+                dx = dx2;*/
+                QPointF dx1 = cZoom*QPointF(node[0](i), node[1](i)) - cZoom*QPointF(node[0](i-1), node[1](i-1));
+                QPointF dx2 = dx1 - cZoom*QPointF(((dx1.x() == 0) ? 0 : (dx1.x() > 0) ? 1 : -1)*(gMax - gMin).x(),
+                        ((dx1.y() == 0) ? 0 : (dx1.y() > 0) ? 1 : -1)*(gMax - gMin).y());
+                QPoint move = QPoint((fabs(dx1.x()) < fabs(dx2.x())) ? dx1.x() : dx2.x(),
+                                     (fabs(dx1.y()) < fabs(dx2.y())) ? dx1.y() : dx2.y());
+                points.back().dots[j] = (cZoom*QPointF(node[0](i-1), node[1](i-1))).toPoint() + move;
+                /*if (j > 0){
                     addEdge(points.back().dots[j - 1], points.back().dots[j], i - 1, i, i1, l, rgb.value());
-                }
+                }*/
             }
            //addEdge(points.back().first[j - 1], points.back().first[j], false);
             if (cont(i1)){
                 points.back().dots[cont[1](i1)] =  points.back().dots[0];
-               addEdge(points.back().dots[0], points.back().dots[cont[1](i1) - 1], cont[0](i1), cont[0](i1) + cont[0](i1), i1, l, rgb.value());
-            } else addEdge(points.back().dots[cont[1](i1) - 1], points.back().dots[cont[1](i1) - 2],
-                    cont[0](i1) + cont[0](i1), cont[0](i1) + cont[0](i1) - 1, i1, l, rgb.value());
+               //addEdge(points.back().dots[0], points.back().dots[cont[1](i1) - 1], cont[0](i1), cont[0](i1) + cont[0](i1), i1, l, rgb.value());
+            }/* else addEdge(points.back().dots[cont[1](i1) - 1], points.back().dots[cont[1](i1) - 2],
+                    cont[0](i1) + cont[0](i1), cont[0](i1) + cont[0](i1) - 1, i1, l, rgb.value());*/
         }
    }
    panelChange =true;
@@ -117,9 +130,9 @@ void RenderArea::addEdge(QPoint b, QPoint e, int _p1, int _p2, int c, int s, uin
     //b = (b + shift)/zoom; e = (e + shift) / zoom;
     int vert = (yMax) / 199, hor = (xMax) / 199;
     addr[b.y() / vert][b.x() / hor].push_back(Cell(b, b, _p1, _p2, c, s, col));
-    /*if (b.y() < e.y())
+    if (b.y() < e.y())
         addr[b.y() / vert][b.x() / hor].push_back(Cell(b, e, _p1, _p2, c, s, col));
-    else addr[e.y() / vert][e.x() / hor].push_back(Cell(e, b, _p2, _p1, c, s, col));*/
+    else addr[e.y() / vert][e.x() / hor].push_back(Cell(e, b, _p2, _p1, c, s, col));
     QPoint move = b - e;
     if (b.y() < e.y())
         for (int i = e.y() / vert; i != b.y() / vert; i += (move.y() > 0) ? 1 : -1)
@@ -199,10 +212,10 @@ void RenderArea::paintEvent(QPaintEvent * /* event */){
          }
     }
     painter.setPen(black);
-    painter.drawText(0, 10, QString::number((0 + shift.x())/zoom/cZoom) + QString(":") + QString::number((10 + shift.y())/zoom/cZoom));
-    painter.drawText(width() - 120, 10, QString::number((width() - 120 + shift.x())/zoom/cZoom) + QString(":") + QString::number((10 + shift.y())/zoom/cZoom));
+    painter.drawText(0, 10, QString::number(((0 + shift.x())/zoom + xMin)/cZoom) + QString(":") + QString::number(((10 + shift.y())/zoom+yMin)/cZoom));
+    painter.drawText(width() - 120, 10, QString::number(((width() - 120 + shift.x())/zoom+xMin)/cZoom) + QString(":") + QString::number(((10 + shift.y())/zoom+yMin)/cZoom));
     painter.drawText(0, height(), QString::number((10 + shift.x())/zoom/cZoom) + QString(":") + QString::number((height() + shift.y())/zoom/cZoom));
-    painter.drawText(width() - 120, height(), QString::number((width() - 120 + shift.x())/zoom/cZoom) + QString(":") + QString::number((height() + shift.y())/zoom/cZoom));
+    painter.drawText(width() - 120, height(), QString::number(((width() - 120 + shift.x())/zoom+xMin)/cZoom) + QString(":") + QString::number(((height() + shift.y())/zoom+yMin)/cZoom));
     painter.setPen(QColor(0, 255, 0, 255));
     painter.setBrush(QColor(255, 0, 0, 170));
     panelChange = false;
@@ -211,7 +224,7 @@ void RenderArea::paintEvent(QPaintEvent * /* event */){
 
 void RenderArea::mousePressEvent(QMouseEvent *event) {
     pressPoint = event->pos();
-    search(event->pos());
+    //search(event->pos());
 }
 
 void RenderArea::search(QPoint pos){
@@ -222,51 +235,52 @@ void RenderArea::search(QPoint pos){
             if ((pos - (*it).first() * zoom + shift).manhattanLength() < 3){
                     look.push_back((*it));
                     choosed = true;
-                    emit chooseD();
+                    emit chooseD((*it).n1(), (*it).nc());
 
                     update();
                     return;
                 }
-            if (abs((*it).first().x() - (*it).second().x()) < 2) {
+            if (abs((*it).first().x() - (*it).second().x()) < 2)
                     if (abs((*it).first().x() * zoom - shift.x() - pos.x()) < 4){
                 int f = (*it).first().y() * zoom - shift.y(), s = (*it).second().y() * zoom - shift.y();
                 if (abs(pos.y() - f) + abs(pos.y() - s) <= 2 + abs(f - s)){
                     look.push_back((*it));
                     choosed = true;
-                    emit choose();
+                    emit choose((*it).n1(), (*it).n2(), (*it).nc());
 
                     update();
                     return;
                 }
             }
-                }
-            if (abs((*it).first().y() - (*it).second().y()) < 2) {
+
+            if (abs((*it).first().y() - (*it).second().y()) < 2)
                     if (abs((*it).first().y() * zoom - shift.y() - pos.y()) < 4){
                 int f = (*it).first().x() * zoom - shift.x(), s = (*it).second().x() * zoom - shift.x();
                 if (abs(pos.x() - f) + abs(pos.x() - s) <= 2 + abs(f - s)){
                     look.push_back((*it));
                     choosed = true;
-                    emit choose();
+                    emit choose((*it).n1(), (*it).n2(), (*it).nc());
 
                     update();
                     return;
                 }
-            } }
+            }
             if ((pos - (*it).first() * zoom + shift).manhattanLength() +
                      (pos - (*it).second() * zoom + shift).manhattanLength() <=
                      2 + (((*it).second() - (*it).first()) * zoom).manhattanLength()) {
-                    std::cout << (*it).n1() << std::endl;
+                    //std::cout << (*it).n1() << std::endl;
                     QPoint f = (*it).first() * zoom - shift, s = (*it).second() * zoom - shift;
                     int y = (pos.x() * (f.y() - s.y()) + f.x() * s.y() - s.x() * f.y())/(f.x() - s.x());
                     if (abs(pos.y() - y) < 7){
                         look.push_back((*it));
                         choosed = true;
-                        emit choose();
+                        emit choose((*it).n1(), (*it).n2(), (*it).nc());
 
                         update();
                         return;
                     }
-            }}
+            }
+        }
     choosed = false;
     look.clear();
     return;
@@ -287,12 +301,15 @@ void RenderArea::wheelEvent(QWheelEvent *event) {
     if (event->delta() > 0)
         zoom *= 1.5;
     else
-        if (zoom > 0.2)
+        if (zoom > 0.02)
             zoom /= 1.5;
     shift = setShift(event->pos(), lZ);
     update();
 }
-
+QImage  RenderArea::getImage(){
+    return panel;
+}
+/*
 QString RenderArea::nowChoose(){
     //QLabel(this->children().first())
     if (look.back().first().x() > 0 && choosed){
@@ -315,4 +332,4 @@ QString RenderArea::nowChooseD(){
                     QString::number(look.back().n1())+ QString("\n№ cont ") + QString::number(look.back().nc());
     }
     else return QString("Nothing");
-}
+}*/

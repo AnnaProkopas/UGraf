@@ -33,6 +33,7 @@ public:
     QSize sizeHint() const override;
     QString nowChoose();
     QString nowChooseD();
+    QImage getImage();
 
 public slots:
 
@@ -49,7 +50,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    /*const*/ size_t cZoom = 350;//добавить алгоритм вычисления - в зависимости от max-min
+    /*const*/ int cZoom = 350;//добавить алгоритм вычисления - в зависимости от max-min
     int xMin, yMin, xMax, yMax;
     QPointF gMin, gMax;
     double zoom = 1;
@@ -81,8 +82,8 @@ protected:
     void resizeEvent(QResizeEvent *event) override;*/
 public:
     signals:
-    void choose();
-    void chooseD();
+    void choose(int n1, int n2, int c);
+    void chooseD(int n, int c);
 };
 
 #endif // RENDERAREA_H

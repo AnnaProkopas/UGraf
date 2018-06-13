@@ -27,7 +27,6 @@ class MainWindow : public QMainWindow
 public:
      MainWindow();
     ~MainWindow();
-     void read();
 private:
      QMenu *fileMenu;
      RenderArea *renderArea;
@@ -44,7 +43,7 @@ private:
      t_field *field = NULL;
      std::ifstream file;
 
-     //void read();
+     void read();
      void open();
      void save();
      void createActions();
@@ -54,12 +53,18 @@ public slots:
          readTo((t_size)(v * field->getNumT() / 100));
          timeLabel->setText(QString::number((int)(v* field->getNumT() / 100)));
      }
-     void addE(){
-         QString q = renderArea->nowChoose();
+     void addE(int i, int i1, int i2){
+         QString q = QString("Choose edge: \n") + QString::number(field->node()[0](i)) + QString(" : ")
+                 + QString::number(field->node()[1](i)) + QString("  -  ") + QString::number(field->node()[0](i1))
+                 + QString(" : ") + QString::number(field->node()[1](i1)) + QString("\n1: № ") + QString::number(i)
+                     + QString(" \n2: № ")+ QString::number(i1) + QString("\n№ cont ") + QString::number(i2)
+                   ;
          listEdge->addItem(q);
      }
-     void addD(){
-         QString q = renderArea->nowChooseD();
+     void addD(int i, int i1){
+         QString q = QString("Choose dot: \n") + QString::number(field->node()[0](i)) + QString(" : ")
+                 + QString::number(field->node()[1](i)) +  QString("\n№ ") + QString::number(i)
+                      + QString("\n№ cont ") + QString::number(i1);
          listEdge->addItem(q);
      }
 protected:

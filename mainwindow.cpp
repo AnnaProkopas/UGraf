@@ -16,8 +16,8 @@ MainWindow::MainWindow() {//: ui (new MainWindow){
     timeLabel = new QLabel("1");
     //timeSlider->setValue(100);
     connect(timeSlider, SIGNAL(valueChanged(int)), this, SLOT(value(int)));
-    connect(renderArea, SIGNAL(choose()), this, SLOT(addE()));
-    connect(renderArea, SIGNAL(chooseD()), this, SLOT(addD()));
+    connect(renderArea, SIGNAL(choose(int, int, int)), this, SLOT(addE(int, int, int)));
+    connect(renderArea, SIGNAL(chooseD(int, int)), this, SLOT(addD(int, int)));
 
     mainBox->addWidget(renderArea, 0, 0, 2, 1);
     mainBox->addWidget(listEdge, 0, 1, 1, 2);
@@ -41,10 +41,17 @@ MainWindow::MainWindow() {//: ui (new MainWindow){
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
+    file.open("/home/user/UGraf/pvort.dat", std::ios::binary);
+    read();
 }
 
 MainWindow::~MainWindow()
 {
+    file.close();
+    delete listEdge;
+    delete renderArea;
+    delete timeLabel;
+    delete timeSlider;
     //delete ui;
 }
 
@@ -60,7 +67,6 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 #endif // QT_NO_CONTEXTMENU
 
 void MainWindow::read(){
-    file.open("/home/user/UGraf/cont+01.dat", std::ios::binary);
       if (!file){
           QMessageBox messageBox;
           messageBox.critical(0,"Error","Файл не найден!");
@@ -216,12 +222,27 @@ void MainWindow::open(){
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open Data file or Specific file"), "",
         tr("Data file (*.dat);;Data file (*.dat);;All Files (*)"));
+    file.close();
+    file.open(fileName.toStdString(), std::ios::binary);
+      if (!file){
+          QMessageBox messageBox;
+          messageBox.critical(0,"Error","Файл не найден!");
+          messageBox.setFixedSize(500,200);
+          return;
+      }
+      listEdge->addItem(QString("Open file: ") + fileName);
+      read();
 }
 
 void MainWindow::save(){
     QString fileName = QFileDialog::getSaveFileName(this,
           tr("Save Image"), "",
           tr("Image (*.jpg);;All Files (*)"));
+    QImageWriter writer(fileName + QString(".jpg"));
+    if(!writer.write(renderArea->getImage()))
+    {
+        qDebug() << writer.errorString();
+    }
 }
 
 bool MainWindow::keypres(QKeyEvent *keyevent){
