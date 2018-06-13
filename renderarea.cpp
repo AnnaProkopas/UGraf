@@ -47,23 +47,6 @@ void RenderArea::setTransformed(bool transformed){
     update();
 }
 
-/*void RenderArea::plot(t_real* &nX, t_real* &nY, uint32_t k1, uint32_t k2, uint32_t _size, uint32 isCircle){
-    points.push_back(std::make_pair(new QPoint[_size], _size));
-    sizeL = points.size();
-    int last = -1;
-    for(int j = 0, i = k1; i <= k2; i++, j++){
-        points.back().first[j] = QPoint(-1*Xmin + (int)(cZoom*nX[i]), -1*Ymin + (int)(cZoom*nY[i]));
-        if (j > 0)
-            last = addEdge(points.back().first[j - 1], points.back().first[j], last);
-    }
-    last = addEdge(points.back().first[k2 - k1 - 1], points.back().first[k2 - k1], last);
-    if (isCircle){
-        points.back().first[_size - 1] =  points.back().first[0];
-        last = addEdge(points.back().first[_size - 2], points.back().first[_size - 1], last);
-    }
-    panel_change =true;
-}*/
-
 void RenderArea::chooseCZoom(size_t size){
     if (cZoom < CONST_ZOOM)
         cZoom = width()/(gMax - gMin).x();
@@ -86,33 +69,33 @@ void RenderArea::plot(t_node &node, t_cont &cont, t_step &step){
         QColor rgb = QColor(255*l*hc, 255*(l*hc >= 0.5)*(l*hc - 0.5), 255*(l*hc >= 1)*(l*hc - 1));
         for (uint32 i1 = step[0](l); i1 < step[0](l) + step[1](l); i1++){
             points.push_back(Circuit(cont[1](i1)+cont(i1), rgb));
-            int j = 0;
-            //points.back().dots[0] = cZoom*QPoint(node[0](cont[0](i1)), node[1](cont[0](i1)));
+            int j = 1; bool z = cont(i1);
+            points.back().dots[0] = QPoint(cZoom*node[0](cont[0](i1)), cZoom*node[1](cont[0](i1))) - QPoint(xMin, yMin);
             for(uint32 i = cont[0](i1)+1; i < cont[0](i1) + cont[1](i1); i++, j++){
+                if (fabs(fabs(node[0](i) - node[0](i-1)) - (gMax - gMin).x()) < 1 ||
+                        fabs(fabs(node[1](i) - node[1](i-1)) - (gMax - gMin).y()) < 1){
+                    std::cout << j <<  " " <<cont[1](i1) << std::endl;
+                    points.back().mSize(); z = false;
+                    if (j == 1){
+                        j = 0;
+                    }else{
+                        points.push_back(Circuit(cont[1](i1)+cont(i1) - j, rgb));
+                        j = 0;
+                    }
+                    //continue;
+                    //std::cout << node[0](i-1) << " " << node[0](i) << std::endl;
+                }
                 points.back().dots[j] = QPoint(cZoom*node[0](i) - xMin, cZoom*node[1](i) - yMin);
-
-                /*dx1 = (x2 - x1);
-                dx2 = dx1 - sign(dx1) * (max_x - min_x);
-                if (fabs(dx1) < fabs(dx2))
-                dx = dx1;
-                else
-                dx = dx2;*/
-                /*QPointF dx1 = cZoom*QPointF(node[0](i), node[1](i)) - cZoom*QPointF(node[0](i-1), node[1](i-1));
-                QPointF dx2 = dx1 - cZoom*QPointF(((dx1.x() == 0) ? 0 : (dx1.x() > 0) ? 1 : -1)*(gMax - gMin).x(),
-                        ((dx1.y() == 0) ? 0 : (dx1.y() > 0) ? 1 : -1)*(gMax - gMin).y());
-                QPoint move = QPoint((fabs(dx1.x()) < fabs(dx2.x())) ? dx1.x() : dx2.x(),
-                                     (fabs(dx1.y()) < fabs(dx2.y())) ? dx1.y() : dx2.y());
-                points.back().dots[j] = (cZoom*QPointF(node[0](i-1), node[1](i-1))).toPoint() + move;*/
-
-                if (j > 0){
+                if (j > 0)
                     addEdge(points.back().dots[j - 1], points.back().dots[j], i - 1, i, i1, l, rgb.value());
                 }
-            }
             if (cont(i1)){
-                points.back().dots[cont[1](i1)] =  points.back().dots[0];
-               addEdge(points.back().dots[0], points.back().dots[cont[1](i1) - 1], cont[0](i1), cont[0](i1) + cont[0](i1), i1, l, rgb.value());
-            }/* else addEdge(points.back().dots[cont[1](i1) - 1], points.back().dots[cont[1](i1) - 2],
-                    cont[0](i1) + cont[0](i1), cont[0](i1) + cont[0](i1) - 1, i1, l, rgb.value());*/
+                if (z){
+                points.back().dots[points.back().size() - 1] =  points.back().dots[0];
+               addEdge(points.back().dots[0], points.back().dots[j], cont[0](i1), cont[0](i1) + cont[0](i1), i1, l, rgb.value());
+                } else points.back().mSize();
+            } //else addEdge(points.back().dots[cont[1](i1) - 1], points.back().dots[cont[1](i1) - 2],
+              //      cont[0](i1) + cont[0](i1), cont[0](i1) + cont[0](i1) - 1, i1, l, rgb.value());
         }
    }
    panelChange =true;
@@ -226,7 +209,7 @@ void RenderArea::paintEvent(QPaintEvent * /* event */){
 
 void RenderArea::mousePressEvent(QMouseEvent *event) {
     pressPoint = event->pos();
-    //search(event->pos());
+    search(event->pos());
 }
 
 void RenderArea::search(QPoint pos){

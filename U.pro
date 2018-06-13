@@ -20,7 +20,9 @@ SOURCES +=\
     main.cpp
 
 HEADERS  += mainwindow.h \
-    renderarea.h
+    renderarea.h \
+    data.h \
+    helpstract.h
 
 FORMS    += mainwindow.ui
 
@@ -30,7 +32,9 @@ RESOURCES += \
 DISTFILES += \
     cont+01.dat \
     cont+02.dat \
-    cont+03.dat
+    cont+03.dat\
+    input.txt \
+    pvort.dat
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/widgets/mainwindows/application

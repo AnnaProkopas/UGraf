@@ -14,6 +14,7 @@ public:
     Circuit(t_size s, QColor c) : sizeC(s), colorC(c) { dots = new QPoint[sizeC]; }
     QColor color() { return colorC; }
     t_size size() { return sizeC; }
+    void mSize() { sizeC -= 1; }
 };
 
 struct Cell{
