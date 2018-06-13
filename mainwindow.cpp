@@ -6,19 +6,25 @@
 
 const int IdRole = Qt::UserRole;
 
-MainWindow::MainWindow() {
+MainWindow::MainWindow() {//: ui (new MainWindow){
     renderArea = new RenderArea();
     chooseEdge = new QPlainTextEdit();
     QWidget *wid = new QWidget(this);
     QGridLayout *mainBox = new QGridLayout;
     listEdge = new QListWidget;
     timeSlider = new QSlider(Qt::Horizontal);
+    timeLabel = new QLabel("1");
+    //timeSlider->setValue(100);
+    connect(timeSlider, SIGNAL(valueChanged(int)), this, SLOT(value(int)));
+    connect(renderArea, SIGNAL(choose()), this, SLOT(addE()));
+    connect(renderArea, SIGNAL(chooseD()), this, SLOT(addD()));
 
     mainBox->addWidget(renderArea, 0, 0, 2, 1);
-    mainBox->addWidget(listEdge, 0, 1, 1, 1);
+    mainBox->addWidget(listEdge, 0, 1, 1, 2);
     mainBox->addWidget(timeSlider, 1, 1, -1, -1);
+    mainBox->addWidget(timeLabel, 1, 1, 1, -1, Qt::AlignRight);
     QSizePolicy spLeft(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    spLeft.setHorizontalStretch(4);
+    spLeft.setHorizontalStretch(5);
     spLeft.setVerticalPolicy(QSizePolicy::MinimumExpanding);
     renderArea->setSizePolicy(spLeft);
     QSizePolicy spRight(QSizePolicy::Preferred, QSizePolicy::Preferred);
@@ -39,7 +45,7 @@ MainWindow::MainWindow() {
 
 MainWindow::~MainWindow()
 {
-    //...
+    //delete ui;
 }
 
 #ifndef QT_NO_CONTEXTMENU
@@ -54,120 +60,145 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 #endif // QT_NO_CONTEXTMENU
 
 void MainWindow::read(){
-    /*std::ifstream fid ("/home/user/UGraf/cont+02.dat", std::ios::binary);
-    if (!fid){
-        std::cout << "Файл не найден";
-        return;
-    }
-    t_real min_x, min_y, max_x, max_y;
-    uint32 num_t, num_p, num_c, num_s;
-        fid.read((char *)&min_x, sizeof(double));
-        fid.read((char *)&min_y, sizeof(double));
-        fid.read((char *)&max_x, sizeof(double));
-        fid.read((char *)&max_y, sizeof(double));
-        fid.read((char *)&num_t, sizeof(uint32));
-        fid.read((char *)&num_p, sizeof(uint32));
-    double *NODEX = new double[num_p], *NODEY = new double[num_p];
-    t_real temp;
-    for(uint32 i = 0; i < num_p; i++){
-        fid.read((char *)&temp, sizeof(double));
-        NODEX[i] = temp;
-    }
-    for(uint32 i = 0; i < num_p; i++){
-        fid.read((char *)&temp, sizeof(double));
-        NODEY[i] = temp;
-    }
-    fid.read((char *)&num_c, sizeof(char)*4);
-    uint32* CONTI = new uint32[num_c], * CONTN = new uint32[num_c];
-    for(uint32 i = 0; i < num_c; i++){
-        fid.read((char *)&CONTI[i], sizeof(char)*4);
-    }
-    for(uint32 i = 0; i < num_c; i++){
-        fid.read((char *)&CONTN[i], sizeof(uint32));
-    }
-    bool* CONTS = new bool[num_c], c;
-    for(uint32 i = 0; i < num_c; i++){
-        fid.read((char *)&c, sizeof(char));
-        if (c*1)
-            CONTS[i] = true;
-        else CONTS[i] = false;
-    }
-    fid.read((char *)&num_s, sizeof(uint32));
-    uint32* STEPI = new uint32[num_s], *STEPN = new uint32[num_s];
-    for(uint32 i = 0; i < num_s; i++){
-        fid.read((char *)&STEPI[i], sizeof(uint32));
-    }
-    for(uint32 i = 0; i < num_s; i++){
-        fid.read((char *)&STEPN[i], sizeof(uint32));
-    }
-    //Выполняем отрисовку контуров (по уровням):
-    //int RGB[3] = {0, 0, 0};
-    //double dc[3] = {0, 0.5*1, 0.5*2}, hc = 1.0 / num_s;
-    //std::cout << num_s << "-\n";
-    renderArea->getMin(min_x, min_y);
-    renderArea->getMax(max_x, max_y);
-    for (uint32 l = 0; l < num_s; l++){
-        uint32 c1 = STEPI[l] + 1, c2 = (c1 + STEPN[l]) - 1;
-        for (uint32 i = c1 - 1; i < c2; i++){
-            uint32 k1 = CONTI[i], k2 = (k1 + CONTN[i]) - 2;
-            renderArea->plot(NODEX, NODEY, k1, k2, k2 - k1 + 1 + (CONTS[i] ? 1:0), CONTS[i]);
-        }
-    }*/
-    std::ifstream fid ("/home/user/UGraf/pvort.dat", std::ios::binary);
-      if (!fid){
-          std::cout << "Файл не найден";
+    file.open("/home/user/UGraf/cont+01.dat", std::ios::binary);
+      if (!file){
+          QMessageBox messageBox;
+          messageBox.critical(0,"Error","Файл не найден!");
+          messageBox.setFixedSize(500,200);
           return;
       }
+      if (field != NULL) delete field;
+      field = new t_field(file);
       //fid.seekg();
       t_real min_x, min_y, max_x, max_y;
       uint32_t num_t, num_p, num_c, num_s;
-      fid.read((char *)&min_x, sizeof(double));
-      fid.read((char *)&min_y, sizeof(double));
-      fid.read((char *)&max_x, sizeof(double));
-      fid.read((char *)&max_y, sizeof(double));
-      fid.read((char *)&num_t, sizeof(uint32));
-      for (int t = 0; t < 1; ++t){
-              fid.read((char *)&num_p, sizeof(uint32));
-              t_node NODE = t_node(num_p);
+      file.read((char *)&min_x, sizeof(double));
+      file.read((char *)&min_y, sizeof(double));
+      file.read((char *)&max_x, sizeof(double));
+      file.read((char *)&max_y, sizeof(double));
+      file.read((char *)&num_t, sizeof(uint32));
+
+      field->setMax(max_x, max_y);
+      field->setMin(min_x, min_y);
+
+      renderArea->setMin(min_x, min_y);
+      renderArea->setMax(max_x, max_y);
+
+      field->setNumT(num_t);
+      shiftInFile = new uint32[num_t + 1];
+      shiftInFile[0] = file.tellg();
+    for (uint32 N = 0; N < num_t; N++){
+              file.read((char *)&num_p, sizeof(uint32));
+              field->create_node(num_p);
               t_real temp;
 
               for(uint32 i = 0; i < num_p; i++){
-                  fid.read((char *)&temp, sizeof(double));
-                  NODE[0](i) = temp;
+                  file.read((char *)&temp, sizeof(double));
+                  field->node()[0](i) = temp;
               }
               for(uint32 i = 0; i < num_p; i++){
-                  fid.read((char *)&temp, sizeof(double));
-                  NODE[1](i) = temp;
+                  file.read((char *)&temp, sizeof(double));
+                  field->node()[1](i) = temp;
               }
-              fid.read((char *)&num_c, sizeof(uint32));
-              t_cont CONT = t_cont(num_c);
+              file.read((char *)&num_c, sizeof(uint32));
+              field->create_cont(num_c);
               for(uint32 i = 0, t1; i < num_c; i++){
-                  fid.read((char *)&t1, sizeof(uint32));
-                  CONT[0](i) = t1;
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->cont()[0](i) = t1;
               }
               for(uint32 i = 0, t1; i < num_c; i++){
-                  fid.read((char *)&t1, sizeof(uint32));
-                  CONT[1](i) = t1;
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->cont()[1](i) = t1;
               }
               for(uint32 i = 0, c; i < num_c; i++){
-                  fid.read((char *)&c, sizeof(char));
-                  CONT(i) = c;
+                  file.read((char *)&c, sizeof(char));
+                  field->cont()(i) = c;
               }
-              fid.read((char *)&num_s, sizeof(uint32));
-              t_step STEP = t_step(num_s);
+              file.read((char *)&num_s, sizeof(uint32));
+              field->create_step(num_s);
               for(uint32 i = 0, t1; i < num_s; i++){
-                  fid.read((char *)&t1, sizeof(uint32));
-                  STEP[0](i) = t1;
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->step()[0](i) = t1;
               }
               for(uint32 i = 0, t1; i < num_s; i++){
-                  fid.read((char *)&t1, sizeof(uint32));
-                  STEP[1](i) = t1;
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->step()[1](i) = t1;
               }
-              renderArea->getMin(min_x, min_y);
-              renderArea->getMax(max_x, max_y);
-              renderArea->plot(NODE, CONT, STEP, num_s);
-      }
+              shiftInFile[N+1] = file.tellg();
+    }
+    timeLabel->setText("1");
+    timeSlider->setValue(1);
+    readTo(0);
+              //renderArea->plot(field->node(), field->cont(), field->step());
+      //}
 }
+
+void MainWindow::readTo(t_size t){
+    if (t < 0 || t > field->getNumT()){
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Wong time!");
+        messageBox.setFixedSize(500,200);
+        return;
+    }
+    if (t == field->getT())
+        return;
+    else field->setT(t);
+    if (!file){
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Файл не найден!");
+        messageBox.setFixedSize(500,200);
+        return;
+    }
+    //unsigned long long seekNum =2*field->node().size()*sizeof(double) + field->cont().size()*(2*sizeof(uint32) + sizeof(char)) +
+     //                            field->step().size()*2*sizeof(uint32);
+   // seekNum += 4*sizeof(double) + 4*sizeof(uint32);
+    //std::ifstream file = field->getFile();
+    file.seekg(0, std::ios_base::beg);
+    file.seekg(shiftInFile[t], std::ios_base::beg);
+    //file.seekg(seekNum, std::ios_base::cur);
+      t_size num_p, num_c, num_s;
+              file.read((char *)&num_p, sizeof(uint32));
+              //field->create_node(num_p);
+              field->create_node(num_p);
+              t_real temp;
+
+              for(uint32 i = 0; i < num_p; i++){
+                  file.read((char *)&temp, sizeof(double));
+                  field->node()[0](i) = temp;
+              }
+              for(uint32 i = 0; i < num_p; i++){
+                  file.read((char *)&temp, sizeof(double));
+                  field->node()[1](i) = temp;
+              }
+              file.read((char *)&num_c, sizeof(uint32));
+              field->create_cont(num_c);
+              for(uint32 i = 0, t1; i < num_c; i++){
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->cont()[0](i) = t1;
+              }
+              for(uint32 i = 0, t1; i < num_c; i++){
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->cont()[1](i) = t1;
+              }
+              for(uint32 i = 0, c; i < num_c; i++){
+                  file.read((char *)&c, sizeof(char));
+                  field->cont()(i) = c;
+              }
+              file.read((char *)&num_s, sizeof(uint32));
+              field->create_step(num_s);
+              for(uint32 i = 0, t1; i < num_s; i++){
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->step()[0](i) = t1;
+              }
+              for(uint32 i = 0, t1; i < num_s; i++){
+                  file.read((char *)&t1, sizeof(uint32));
+                  field->step()[1](i) = t1;
+              }
+              //shiftInFile[N] = file.tellg();
+              renderArea->plot(field->node(), field->cont(), field->step());
+      //}
+}
+
 
 void MainWindow::createActions(){
     openAct = new QAction(tr("&Open..."), this);
@@ -175,7 +206,7 @@ void MainWindow::createActions(){
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, &QAction::triggered, this, &MainWindow::open);
 
-    saveAct = new QAction(tr("&Save"), this);
+    saveAct = new QAction(tr("&Save..."), this);
     saveAct->setShortcuts(QKeySequence::Save);
     saveAct->setStatusTip(tr("Save the document to disk"));
     connect(saveAct, &QAction::triggered, this, &MainWindow::save);
@@ -184,7 +215,7 @@ void MainWindow::createActions(){
 void MainWindow::open(){   
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open Data file or Specific file"), "",
-        tr("Data file (*.bin);;Data file (*.dat);;All Files (*)"));
+        tr("Data file (*.dat);;Data file (*.dat);;All Files (*)"));
 }
 
 void MainWindow::save(){
